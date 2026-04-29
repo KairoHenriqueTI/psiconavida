@@ -1,0 +1,47 @@
+[
+  {
+    "id": "d024d42a-8cd3-4eba-8903-b83a6d375b72",
+    "name": "Autoconhecimento",
+    "slug": "autoconhecimento",
+    "description": "Descubra quem você realmente é. Artigos sobre introspecção, identidade e jornada interior.",
+    "image": "https://gbtobvijtqaaubftmhhl.supabase.co/storage/v1/object/public/cms-images/categories/autoconhecimento.jpg",
+    "created_at": "2026-04-15T21:55:49.029581+00:00",
+    "updated_at": "2026-04-15T22:09:33.155253+00:00"
+  },
+  {
+    "id": "c838911f-3d04-4540-b2a9-26727da10c50",
+    "name": "Relacionamentos",
+    "slug": "relacionamentos",
+    "description": "Reflexões sobre vínculos afetivos, comunicação e conexões humanas saudáveis.",
+    "image": "https://gbtobvijtqaaubftmhhl.supabase.co/storage/v1/object/public/cms-images/categories/relacionamentos.jpg",
+    "created_at": "2026-04-15T21:55:49.029581+00:00",
+    "updated_at": "2026-04-15T22:09:33.155253+00:00"
+  },
+  {
+    "id": "e1b8865f-2e0c-407d-ba87-fa9721a18b9e",
+    "name": "Saúde Mental",
+    "slug": "saude-mental",
+    "description": "Informações e acolhimento sobre ansiedade, depressão, estresse e bem-estar emocional.",
+    "image": "https://gbtobvijtqaaubftmhhl.supabase.co/storage/v1/object/public/cms-images/categories/saude-mental.jpg",
+    "created_at": "2026-04-15T21:55:49.029581+00:00",
+    "updated_at": "2026-04-15T22:09:33.155253+00:00"
+  },
+  {
+    "id": "5f224035-9731-4314-9a3b-687b2de55eac",
+    "name": "Mindfulness",
+    "slug": "mindfulness",
+    "description": "Práticas de atenção plena, meditação e presença no momento para uma vida mais equilibrada.",
+    "image": "https://gbtobvijtqaaubftmhhl.supabase.co/storage/v1/object/public/cms-images/categories/mindfulness.jpg",
+    "created_at": "2026-04-15T21:55:49.029581+00:00",
+    "updated_at": "2026-04-15T22:09:33.155253+00:00"
+  },
+  {
+    "id": "26904ab5-e1aa-4088-95ef-4b3b5f0fd999",
+    "name": "Desenvolvimento Pessoal",
+    "slug": "desenvolvimento-pessoal",
+    "description": "Ferramentas e insights para crescer, evoluir e alcançar seu potencial.",
+    "image": "https://gbtobvijtqaaubftmhhl.supabase.co/storage/v1/object/public/cms-images/categories/desenvolvimento.jpg",
+    "created_at": "2026-04-15T21:55:49.029581+00:00",
+    "updated_at": "2026-04-15T22:09:33.155253+00:00"
+  }
+]

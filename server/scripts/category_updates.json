@@ -1,0 +1,27 @@
+[
+  {
+    "slug": "autoconhecimento",
+    "description": "Práticas e reflexões para entender a si mesmo, cultivar auto-observação e crescimento pessoal.",
+    "image": "/src/assets/category-autoconhecimento.jpg"
+  },
+  {
+    "slug": "relacionamentos",
+    "description": "Conteúdos sobre afeto, vínculos, comunicação e cuidado nas relações pessoais.",
+    "image": "/src/assets/category-relacoes.jpg"
+  },
+  {
+    "slug": "saude-mental",
+    "description": "Ferramentas, informações e acolhimento para cuidar da saúde mental no dia a dia.",
+    "image": "/src/assets/category-bemestar.jpg"
+  },
+  {
+    "slug": "mindfulness",
+    "description": "Exercícios e práticas de atenção plena para presença, regulação emocional e bem-estar.",
+    "image": "/src/assets/category-estudos.jpg"
+  },
+  {
+    "slug": "desenvolvimento-pessoal",
+    "description": "Técnicas e reflexões para construir hábitos saudáveis e desenvolver competências pessoais.",
+    "image": "/src/assets/category-estudos.jpg"
+  }
+]

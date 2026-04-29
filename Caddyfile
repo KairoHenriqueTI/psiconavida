@@ -1,0 +1,9 @@
+psico.kairohenrique.dev {
+  encode zstd gzip
+  reverse_proxy frontend:80
+}
+
+api.psico.kairohenrique.dev {
+  encode zstd gzip
+  reverse_proxy backend:3001
+}

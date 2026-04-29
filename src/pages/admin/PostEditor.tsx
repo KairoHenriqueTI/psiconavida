@@ -1,0 +1,316 @@
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import ImageUpload from "@/components/admin/ImageUpload";
+import { toast } from "sonner";
+import { ArrowLeft, Bold, Heading1, Heading2, Heading3, Italic, Link2, List, ListOrdered, Pilcrow, Quote, RemoveFormatting, Redo2, Undo2 } from "lucide-react";
+
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+export default function PostEditor() {
+  const { id } = useParams<{ id: string }>();
+  const isNew = id === "novo";
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+
+  const [form, setForm] = useState({
+    title: "",
+    slug: "",
+    excerpt: "",
+    content: "",
+    image: "",
+    category_id: "",
+    read_time: "5 min",
+    published: false,
+    date: new Date().toISOString().split("T")[0],
+  });
+  const [htmlDraft, setHtmlDraft] = useState("");
+  const { data: categories } = useQuery({
+    queryKey: ["admin-categories"],
+    queryFn: async () => {
+      const res = await fetch(`${API}/api/categories`);
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      return res.json();
+    },
+  });
+
+  const { data: existingPost } = useQuery({
+    queryKey: ["admin-post", id],
+    enabled: !isNew && !!id,
+    queryFn: async () => {
+      const res = await fetch(`${API}/api/posts/${id}`);
+      if (!res.ok) throw new Error('Not found');
+      return res.json();
+    },
+  });
+
+  useEffect(() => {
+    if (existingPost) {
+      setForm({
+        title: existingPost.title,
+        slug: existingPost.slug,
+        excerpt: existingPost.excerpt || "",
+        content: existingPost.content || "",
+        image: existingPost.image || "",
+        category_id: existingPost.category?.id || existingPost.categoryId || "",
+        read_time: existingPost.read_time,
+        published: existingPost.published,
+        date: existingPost.date.split("T")[0],
+      });
+      setHtmlDraft(existingPost.content || "");
+    }
+  }, [existingPost]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const payload: any = {
+        title: form.title,
+        slug: form.slug,
+        excerpt: form.excerpt,
+        content: form.content,
+        image: form.image,
+        categoryId: form.category_id || null,
+        read_time: form.read_time,
+        published: !!form.published,
+        date: new Date(form.date).toISOString(),
+      };
+
+      if (isNew) {
+        const res = await fetch(`${API}/api/posts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to create post');
+      } else {
+        const res = await fetch(`${API}/api/posts/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to update post');
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-posts"] });
+      toast.success(isNew ? "Publicação criada!" : "Publicação atualizada!");
+      navigate("/admin/posts");
+    },
+    onError: (err: Error) => {
+      toast.error("Erro: " + err.message);
+    },
+  });
+
+  const update = (key: string, value: any) => {
+    setForm((prev) => {
+      const next = { ...prev, [key]: value };
+      if (key === "title" && (isNew || prev.slug === slugify(prev.title))) {
+        next.slug = slugify(value);
+      }
+      return next;
+    });
+  };
+
+  const exec = (command: string, value?: string) => {
+    document.execCommand(command, false, value);
+    const el = document.getElementById("rich-editor");
+    if (el) {
+      update("content", (el as HTMLElement).innerHTML);
+      setHtmlDraft((el as HTMLElement).innerHTML);
+    }
+  };
+
+  const normalizeEditorHtml = (html: string) => {
+    return html
+      .replace(/<div><br><\/div>/g, "<p></p>")
+      .replace(/<div>/g, "<p>")
+      .replace(/<\/div>/g, "</p>")
+      .replace(/<span[^>]*>/g, "")
+      .replace(/<\/span>/g, "");
+  };
+
+  const heading = (level: "p" | "h1" | "h2" | "h3" | "blockquote") => exec("formatBlock", level);
+
+  return (
+    <div className="max-w-4xl">
+      <button
+        onClick={() => navigate("/admin/posts")}
+        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+      >
+        <ArrowLeft size={14} /> Voltar
+      </button>
+
+      <h1 className="font-heading text-2xl text-foreground mb-6">
+        {isNew ? "Nova Publicação" : "Editar Publicação"}
+      </h1>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          saveMutation.mutate();
+        }}
+        className="space-y-6"
+      >
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-subtitle text-foreground block mb-1.5">Título</label>
+            <input
+              value={form.title}
+              onChange={(e) => update("title", e.target.value)}
+              required
+              className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-subtitle text-foreground block mb-1.5">Slug</label>
+            <input
+              value={form.slug}
+              onChange={(e) => update("slug", e.target.value)}
+              required
+              className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="text-sm font-subtitle text-foreground block mb-1.5">Resumo</label>
+          <textarea
+            value={form.excerpt}
+            onChange={(e) => update("excerpt", e.target.value)}
+            rows={2}
+            className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring resize-y"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-subtitle text-foreground block mb-1.5">Conteúdo</label>
+          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="border-b border-border bg-gradient-to-r from-background to-muted/30 px-3 py-2.5">
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => heading("p")} className="editor-toolbar-btn"><Pilcrow size={14} />Parágrafo</button>
+                <button type="button" onClick={() => heading("h1")} className="editor-toolbar-btn"><Heading1 size={14} />H1</button>
+                <button type="button" onClick={() => heading("h2")} className="editor-toolbar-btn"><Heading2 size={14} />H2</button>
+                <button type="button" onClick={() => heading("h3")} className="editor-toolbar-btn"><Heading3 size={14} />H3</button>
+                <button type="button" onClick={() => exec("bold")} className="editor-toolbar-btn"><Bold size={14} />Negrito</button>
+                <button type="button" onClick={() => exec("italic")} className="editor-toolbar-btn"><Italic size={14} />Itálico</button>
+                <button type="button" onClick={() => exec("insertUnorderedList")} className="editor-toolbar-btn"><List size={14} />Lista</button>
+                <button type="button" onClick={() => exec("insertOrderedList")} className="editor-toolbar-btn"><ListOrdered size={14} />Lista numerada</button>
+                <button type="button" onClick={() => heading("blockquote")} className="editor-toolbar-btn"><Quote size={14} />Citação</button>
+                <button type="button" onClick={() => {
+                  const url = window.prompt("URL do link");
+                  if (url) exec("createLink", url);
+                }} className="editor-toolbar-btn"><Link2 size={14} />Link</button>
+                <button type="button" onClick={() => exec("removeFormat")} className="editor-toolbar-btn"><RemoveFormatting size={14} />Limpar</button>
+                <button type="button" onClick={() => exec("undo")} className="editor-toolbar-btn"><Undo2 size={14} />Desfazer</button>
+                <button type="button" onClick={() => exec("redo")} className="editor-toolbar-btn"><Redo2 size={14} />Refazer</button>
+              </div>
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Use H1/H2/H3 para estruturar e Citação para trechos de destaque.
+              </p>
+            </div>
+            <div
+              id="rich-editor"
+              contentEditable
+              suppressContentEditableWarning
+              onPaste={(e) => {
+                e.preventDefault();
+                const text = e.clipboardData.getData("text/plain");
+                document.execCommand("insertText", false, text);
+                const el = document.getElementById("rich-editor");
+                if (el) {
+                  const normalized = normalizeEditorHtml((el as HTMLElement).innerHTML);
+                  (el as HTMLElement).innerHTML = normalized;
+                  setHtmlDraft(normalized);
+                  update("content", normalized);
+                }
+              }}
+              onBlur={(e) => {
+                const nextHtml = normalizeEditorHtml((e.currentTarget as HTMLElement).innerHTML);
+                const normalized = nextHtml === '<p>Escreva aqui o conteúdo da publicação...</p>' ? "" : nextHtml;
+                setHtmlDraft(normalized);
+                update("content", normalized);
+              }}
+              onInput={(e) => {
+                const nextHtml = normalizeEditorHtml((e.currentTarget as HTMLElement).innerHTML);
+                setHtmlDraft(nextHtml);
+                update("content", nextHtml);
+              }}
+              dangerouslySetInnerHTML={{ __html: htmlDraft || form.content || "<p class='editor-placeholder'>Escreva aqui o conteúdo da publicação...</p>" }}
+              className="editor-surface min-h-[360px] max-h-[66vh] overflow-auto"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            O conteúdo é salvo como HTML e já sai formatado.
+          </p>
+        </div>
+
+        <ImageUpload
+          label="Imagem de capa"
+          value={form.image}
+          onChange={(url) => update("image", url)}
+          folder="posts"
+        />
+
+        <div className="grid md:grid-cols-4 gap-4">
+          <div>
+            <label className="text-sm font-subtitle text-foreground block mb-1.5">Categoria</label>
+            <select
+              value={form.category_id}
+              onChange={(e) => update("category_id", e.target.value)}
+              className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">Sem categoria</option>
+              {categories?.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-sm font-subtitle text-foreground block mb-1.5">Tempo de leitura</label>
+            <input
+              value={form.read_time}
+              onChange={(e) => update("read_time", e.target.value)}
+              className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-subtitle text-foreground block mb-1.5">Data</label>
+            <input
+              type="date"
+              value={form.date}
+              onChange={(e) => update("date", e.target.value)}
+              className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.published}
+              onChange={(e) => update("published", e.target.checked)}
+              className="rounded border-border"
+            />
+            <span className="text-sm text-foreground">Publicar</span>
+          </label>
+        </div>
+
+        <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
+          <p className="text-xs text-muted-foreground">
+            O autor da publicação é definido pelo usuário logado no momento do salvamento.
+          </p>
+        </div>
+
+        <button
+          type="submit"
+          disabled={saveMutation.isPending}
+          className="bg-primary text-primary-foreground font-subtitle text-sm px-6 py-2.5 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+        >
+          {saveMutation.isPending ? "Salvando..." : "Salvar"}
+        </button>
+      </form>
+    </div>
+  );
+}

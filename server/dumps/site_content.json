@@ -1,0 +1,85 @@
+[
+  {
+    "id": "8550092f-c8db-4b06-ac1a-c150f87baef2",
+    "section_key": "hero",
+    "content": {
+      "title": "Psicologia para a vida real",
+      "subtitle": "Reflexões, acolhimento e ferramentas para sua jornada interior",
+      "description": "Um espaço dedicado a tornar a psicologia acessível, humana e transformadora. Aqui você encontra conteúdos que conectam ciência e sensibilidade.",
+      "image_mobile": "",
+      "image_desktop": ""
+    },
+    "created_at": "2026-03-12T11:07:20.228392+00:00",
+    "updated_at": "2026-04-15T21:57:46.404721+00:00"
+  },
+  {
+    "id": "41199364-c3bc-4b3e-b571-0cf967e67523",
+    "section_key": "about_preview",
+    "content": {
+      "quote": "Cuidar da mente é o ato mais revolucionário que existe.",
+      "title": "Sobre o Projeto",
+      "description": "O PsiconaVida nasceu da crença de que a psicologia não deveria ficar restrita aos consultórios. Nosso objetivo é levar conhecimento emocional para o dia a dia, com linguagem acessível e embasamento científico.",
+      "image_author": "",
+      "image_secondary": ""
+    },
+    "created_at": "2026-03-12T11:07:20.228392+00:00",
+    "updated_at": "2026-04-15T21:57:46.404721+00:00"
+  },
+  {
+    "id": "9bb90ac0-e926-47ee-8405-d053329b4dfb",
+    "section_key": "manifesto",
+    "content": {
+      "lines": [
+        "Acreditamos que toda pessoa merece ser ouvida.",
+        "Que a saúde mental não é luxo, é direito.",
+        "Que vulnerabilidade é força, não fraqueza.",
+        "Que o autoconhecimento transforma vidas.",
+        "Que a psicologia pertence a todos.",
+        "Que acolher é o primeiro passo para curar.",
+        "Que cada pequena mudança gera grandes revoluções internas."
+      ],
+      "title": "Nosso Manifesto"
+    },
+    "created_at": "2026-03-12T11:07:20.228392+00:00",
+    "updated_at": "2026-04-15T21:57:46.404721+00:00"
+  },
+  {
+    "id": "af942d3f-531c-4311-a5cc-e8ad6b325a51",
+    "section_key": "newsletter",
+    "content": {
+      "image": "",
+      "title": "Receba reflexões no seu e-mail",
+      "button_url": "#",
+      "button_text": "Quero receber",
+      "description": "Toda semana, um conteúdo especial sobre saúde mental, autoconhecimento e bem-estar emocional — direto na sua caixa de entrada.",
+      "footer_text": "Sem spam. Apenas acolhimento."
+    },
+    "created_at": "2026-03-12T11:07:20.228392+00:00",
+    "updated_at": "2026-04-15T21:57:46.404721+00:00"
+  },
+  {
+    "id": "5990d107-7acf-4411-b8cd-f196a7a9a0f7",
+    "section_key": "ethical_notice",
+    "content": {
+      "text": "Este blog tem caráter informativo e educacional. Os conteúdos aqui apresentados não substituem acompanhamento psicológico ou psiquiátrico profissional. Se você está em sofrimento, procure ajuda especializada. CVV: 188 (24h)."
+    },
+    "created_at": "2026-03-12T11:07:20.228392+00:00",
+    "updated_at": "2026-04-15T21:57:46.404721+00:00"
+  },
+  {
+    "id": "7459923c-43f0-4e5f-8859-601ee45a0c90",
+    "section_key": "about_page",
+    "content": {
+      "intro": "O PsiconaVida é um projeto que nasceu do desejo de democratizar o acesso ao conhecimento sobre saúde mental e bem-estar emocional. Acreditamos que a psicologia não deveria ser um privilégio, mas uma ferramenta disponível para todos.",
+      "title": "Sobre o PsiconaVida",
+      "subtitle": "Psicologia acessível para todos",
+      "author_bio": "Psicóloga clínica com mais de 10 anos de experiência, especialista em Terapia Cognitivo-Comportamental e apaixonada por tornar a psicologia acessível. Criadora do PsiconaVida, escreve sobre autoconhecimento, saúde mental e desenvolvimento pessoal com uma abordagem acolhedora e baseada em evidências.",
+      "author_name": "Dra. Ana Silva",
+      "author_image": "",
+      "mission_text": "Tornar a psicologia acessível, humana e transformadora. Queremos que cada pessoa que chegue aqui se sinta acolhida, compreendida e inspirada a cuidar de si mesma com mais gentileza e consciência.",
+      "mission_title": "Nossa Missão"
+    },
+    "created_at": "2026-03-12T11:07:20.228392+00:00",
+    "updated_at": "2026-04-15T21:57:46.404721+00:00"
+  }
+]
