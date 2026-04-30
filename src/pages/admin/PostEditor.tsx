@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ImageUpload from "@/components/admin/ImageUpload";
@@ -22,6 +22,8 @@ export default function PostEditor() {
   const isNew = id === "novo";
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const editorRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef("");
 
   const [form, setForm] = useState({
     title: "",
@@ -34,7 +36,6 @@ export default function PostEditor() {
     published: false,
     date: new Date().toISOString().split("T")[0],
   });
-  const [htmlDraft, setHtmlDraft] = useState("");
   const { data: categories } = useQuery({
     queryKey: ["admin-categories"],
     queryFn: async () => {
@@ -56,24 +57,36 @@ export default function PostEditor() {
 
   useEffect(() => {
     if (existingPost) {
+      const content = existingPost.content || "";
       setForm({
         title: existingPost.title,
         slug: existingPost.slug,
         excerpt: existingPost.excerpt || "",
-        content: existingPost.content || "",
+        content,
         image: existingPost.image || "",
         category_id: existingPost.category?.id || existingPost.categoryId || "",
-        read_time: existingPost.read_time,
+        read_time: existingPost.read_time || "5 min",
         published: existingPost.published,
-        date: existingPost.date.split("T")[0],
+        date: existingPost.date ? existingPost.date.split("T")[0] : new Date().toISOString().split("T")[0],
       });
-      setHtmlDraft(existingPost.content || "");
+      contentRef.current = content;
+      if (editorRef.current && editorRef.current.innerHTML !== content) {
+        editorRef.current.innerHTML = content;
+      }
     }
   }, [existingPost]);
 
+  useEffect(() => {
+    if (!isNew) return;
+    contentRef.current = "";
+    if (editorRef.current) editorRef.current.innerHTML = "";
+  }, [isNew]);
+
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const content = form.content.replace(/<p><br><\/p>/g, "").trim();
+      const content = normalizeEditorHtml(contentRef.current || editorRef.current?.innerHTML || "")
+        .replace(/<p><br><\/p>/g, "")
+        .trim();
       const payload: any = {
         title: form.title.trim(),
         slug: form.slug.trim(),
@@ -120,25 +133,34 @@ export default function PostEditor() {
     });
   };
 
-  const exec = (command: string, value?: string) => {
-    document.execCommand(command, false, value);
-    const el = document.getElementById("rich-editor");
-    if (el) {
-      update("content", (el as HTMLElement).innerHTML);
-      setHtmlDraft((el as HTMLElement).innerHTML);
-    }
-  };
-
   const normalizeEditorHtml = (html: string) => {
     return html
       .replace(/<div><br><\/div>/g, "<p></p>")
       .replace(/<div>/g, "<p>")
       .replace(/<\/div>/g, "</p>")
       .replace(/<span[^>]*>/g, "")
-      .replace(/<\/span>/g, "");
+      .replace(/<\/span>/g, "")
+      .replace(/<p class="editor-placeholder">.*?<\/p>/g, "");
   };
 
-  const heading = (level: "p" | "h1" | "h2" | "h3" | "blockquote") => exec("formatBlock", level);
+  const syncEditorContent = (normalize = false) => {
+    const el = editorRef.current;
+    if (!el) return "";
+    const next = normalize ? normalizeEditorHtml(el.innerHTML) : el.innerHTML;
+    if (normalize && el.innerHTML !== next) el.innerHTML = next;
+    contentRef.current = next;
+    setForm((prev) => (prev.content === next ? prev : { ...prev, content: next }));
+    return next;
+  };
+
+  const exec = (command: string, value?: string) => {
+    editorRef.current?.focus();
+    document.execCommand(command, false, value);
+    syncEditorContent();
+  };
+
+  const heading = (level: "p" | "h1" | "h2" | "h3" | "blockquote") => exec("formatBlock", `<${level}>`);
+  const keepEditorFocus = (event: React.MouseEvent<HTMLButtonElement>) => event.preventDefault();
 
   return (
     <div className="max-w-4xl">
@@ -194,62 +216,47 @@ export default function PostEditor() {
         <div>
           <label className="text-sm font-subtitle text-foreground block mb-1.5">Conteúdo</label>
           <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-            <div className="border-b border-border bg-gradient-to-r from-background to-muted/30 px-3 py-2.5">
+            <div className="sticky top-0 z-10 border-b border-border bg-card/95 px-3 py-2.5 backdrop-blur">
               <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={() => heading("p")} className="editor-toolbar-btn"><Pilcrow size={14} />Parágrafo</button>
-                <button type="button" onClick={() => heading("h1")} className="editor-toolbar-btn"><Heading1 size={14} />H1</button>
-                <button type="button" onClick={() => heading("h2")} className="editor-toolbar-btn"><Heading2 size={14} />H2</button>
-                <button type="button" onClick={() => heading("h3")} className="editor-toolbar-btn"><Heading3 size={14} />H3</button>
-                <button type="button" onClick={() => exec("bold")} className="editor-toolbar-btn"><Bold size={14} />Negrito</button>
-                <button type="button" onClick={() => exec("italic")} className="editor-toolbar-btn"><Italic size={14} />Itálico</button>
-                <button type="button" onClick={() => exec("insertUnorderedList")} className="editor-toolbar-btn"><List size={14} />Lista</button>
-                <button type="button" onClick={() => exec("insertOrderedList")} className="editor-toolbar-btn"><ListOrdered size={14} />Lista numerada</button>
-                <button type="button" onClick={() => heading("blockquote")} className="editor-toolbar-btn"><Quote size={14} />Citação</button>
+                <button type="button" onMouseDown={keepEditorFocus} onClick={() => heading("p")} className="editor-toolbar-btn"><Pilcrow size={14} />Parágrafo</button>
+                <button type="button" onMouseDown={keepEditorFocus} onClick={() => heading("h1")} className="editor-toolbar-btn"><Heading1 size={14} />H1</button>
+                <button type="button" onMouseDown={keepEditorFocus} onClick={() => heading("h2")} className="editor-toolbar-btn"><Heading2 size={14} />H2</button>
+                <button type="button" onMouseDown={keepEditorFocus} onClick={() => heading("h3")} className="editor-toolbar-btn"><Heading3 size={14} />H3</button>
+                <button type="button" onMouseDown={keepEditorFocus} onClick={() => exec("bold")} className="editor-toolbar-btn"><Bold size={14} />Negrito</button>
+                <button type="button" onMouseDown={keepEditorFocus} onClick={() => exec("italic")} className="editor-toolbar-btn"><Italic size={14} />Itálico</button>
+                <button type="button" onMouseDown={keepEditorFocus} onClick={() => exec("insertUnorderedList")} className="editor-toolbar-btn"><List size={14} />Lista</button>
+                <button type="button" onMouseDown={keepEditorFocus} onClick={() => exec("insertOrderedList")} className="editor-toolbar-btn"><ListOrdered size={14} />Lista numerada</button>
+                <button type="button" onMouseDown={keepEditorFocus} onClick={() => heading("blockquote")} className="editor-toolbar-btn"><Quote size={14} />Citação</button>
                 <button type="button" onClick={() => {
                   const url = window.prompt("URL do link");
                   if (url) exec("createLink", url);
-                }} className="editor-toolbar-btn"><Link2 size={14} />Link</button>
-                <button type="button" onClick={() => exec("removeFormat")} className="editor-toolbar-btn"><RemoveFormatting size={14} />Limpar</button>
-                <button type="button" onClick={() => exec("undo")} className="editor-toolbar-btn"><Undo2 size={14} />Desfazer</button>
-                <button type="button" onClick={() => exec("redo")} className="editor-toolbar-btn"><Redo2 size={14} />Refazer</button>
+                }} onMouseDown={keepEditorFocus} className="editor-toolbar-btn"><Link2 size={14} />Link</button>
+                <button type="button" onMouseDown={keepEditorFocus} onClick={() => exec("removeFormat")} className="editor-toolbar-btn"><RemoveFormatting size={14} />Limpar</button>
+                <button type="button" onMouseDown={keepEditorFocus} onClick={() => exec("undo")} className="editor-toolbar-btn"><Undo2 size={14} />Desfazer</button>
+                <button type="button" onMouseDown={keepEditorFocus} onClick={() => exec("redo")} className="editor-toolbar-btn"><Redo2 size={14} />Refazer</button>
               </div>
-              <p className="mt-2 text-[11px] text-muted-foreground">
-                Use H1/H2/H3 para estruturar e Citação para trechos de destaque.
-              </p>
             </div>
-            <div
-              id="rich-editor"
-              contentEditable
-              suppressContentEditableWarning
-              onPaste={(e) => {
-                e.preventDefault();
-                const text = e.clipboardData.getData("text/plain");
-                document.execCommand("insertText", false, text);
-                const el = document.getElementById("rich-editor");
-                if (el) {
-                  const normalized = normalizeEditorHtml((el as HTMLElement).innerHTML);
-                  (el as HTMLElement).innerHTML = normalized;
-                  setHtmlDraft(normalized);
-                  update("content", normalized);
-                }
-              }}
-              onBlur={(e) => {
-                const normalized = normalizeEditorHtml((e.currentTarget as HTMLElement).innerHTML);
-                setHtmlDraft(normalized);
-                update("content", normalized);
-              }}
-              onInput={(e) => {
-                const nextHtml = normalizeEditorHtml((e.currentTarget as HTMLElement).innerHTML);
-                setHtmlDraft(nextHtml);
-                update("content", nextHtml);
-              }}
-              dangerouslySetInnerHTML={{ __html: htmlDraft || form.content }}
-              className="editor-surface min-h-[360px] max-h-[66vh] overflow-auto"
-            />
+            <div className="editor-canvas">
+              <div
+                id="rich-editor"
+                ref={editorRef}
+                contentEditable
+                suppressContentEditableWarning
+                data-placeholder="Escreva aqui o conteúdo da publicação..."
+                onPaste={(e) => {
+                  e.preventDefault();
+                  const text = e.clipboardData.getData("text/plain");
+                  document.execCommand("insertText", false, text);
+                  syncEditorContent();
+                }}
+                onBlur={() => syncEditorContent(true)}
+                onInput={() => {
+                  contentRef.current = editorRef.current?.innerHTML || "";
+                }}
+                className="editor-surface"
+              />
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            O conteúdo é salvo como HTML e já sai formatado.
-          </p>
         </div>
 
         <ImageUpload

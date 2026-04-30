@@ -126,16 +126,20 @@
   }
 
   .editor-toolbar-btn {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-2 text-xs font-medium text-foreground shadow-sm transition-all hover:-translate-y-[1px] hover:bg-accent hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring/40;
+    @apply inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-background px-3 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring/40;
+  }
+
+  .editor-canvas {
+    @apply max-h-[68vh] overflow-auto bg-muted/30 px-4 py-5 sm:px-8;
   }
 
   .editor-surface {
-    @apply px-6 py-5 text-[15px] leading-8 text-foreground outline-none;
+    @apply mx-auto min-h-[620px] w-full max-w-[860px] rounded-md border border-border bg-white px-8 py-10 text-[16px] leading-8 text-foreground shadow-sm outline-none sm:px-12;
     font-family: var(--font-body);
   }
 
   .editor-surface:empty:before {
-    content: "Escreva aqui o conteúdo da publicação...";
+    content: attr(data-placeholder);
     color: hsl(var(--muted-foreground));
     pointer-events: none;
   }
