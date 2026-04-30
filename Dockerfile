@@ -3,9 +3,10 @@ WORKDIR /app
 
 ARG VITE_API_URL=http://localhost:3001
 ENV VITE_API_URL=$VITE_API_URL
+ENV npm_config_cache=/tmp/npm-cache
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci && npm cache clean --force && rm -rf /tmp/npm-cache
 
 COPY . .
 RUN npm run build
