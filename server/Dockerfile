@@ -2,7 +2,7 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache openssl
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 FROM node:20-alpine AS build
 WORKDIR /app
@@ -19,7 +19,7 @@ ENV PORT=3001
 RUN apk add --no-cache openssl
 
 COPY package*.json ./
-RUN npm install --omit=dev
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=build /app/.next ./.next
