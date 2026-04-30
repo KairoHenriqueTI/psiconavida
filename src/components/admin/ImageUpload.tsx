@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { Upload, X, Loader2 } from "lucide-react";
+import { API_BASE } from "@/lib/apiBase";
 
 interface ImageUploadProps {
   value: string;
@@ -16,10 +17,9 @@ export default function ImageUpload({ value, onChange, label, folder = "general"
   const upload = async (file: File) => {
     setUploading(true);
     try {
-      const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch(`${API}/api/uploads`, { method: 'POST', body: fd, credentials: 'include' });
+      const res = await fetch(`${API_BASE}/api/uploads`, { method: 'POST', body: fd, credentials: 'include' });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err?.error || `${res.status} ${res.statusText}`);

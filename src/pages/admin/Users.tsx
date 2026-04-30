@@ -3,8 +3,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Plus, Trash2, X } from "lucide-react";
+import { API_BASE } from "@/lib/apiBase";
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API = API_BASE;
 
 export default function AdminUsers() {
   const { userRole } = useAuth();

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { API_BASE } from "@/lib/apiBase";
 
 const ERROR_MESSAGES: Record<string, string> = {
   CredentialsSignin: "Email ou senha incorretos.",
@@ -65,7 +66,7 @@ export default function AdminLogin() {
     }
 
     // Wait for session to be available (NextAuth may set cookie via redirect or Set-Cookie)
-    const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const API = API_BASE;
     let attempts = 0;
     const waitForSession = async () => {
       while (attempts < 8) {

@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { API_BASE } from "@/lib/apiBase";
 
 type SessionUser = { id?: string; name?: string | null; email?: string | null; role?: string } | null;
 
@@ -102,8 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    await fetch(`${API}/api/auth/signout`, { method: 'POST', credentials: 'include' });
+    await fetch(`${API_BASE}/api/auth/signout`, { method: 'POST', credentials: 'include' });
     setSession(null);
     setUser(null);
     setUserRole(null);

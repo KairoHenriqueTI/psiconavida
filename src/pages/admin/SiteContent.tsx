@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { toast } from "sonner";
+import { API_BASE } from "@/lib/apiBase";
+
+const API = API_BASE;
 import { Save, Loader2 } from "lucide-react";
 
 interface SectionConfig {
@@ -86,7 +89,7 @@ function SectionEditor({ section }: { section: SectionConfig }) {
   const { data, isLoading } = useQuery({
     queryKey: ["site-content", section.key],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/site-content`, { credentials: 'include' });
+      const res = await fetch(`${API}/api/site-content`, { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to load site content');
       const arr = await res.json();
       const entry = (arr || []).find((e: any) => e.key === section.key);
@@ -109,7 +112,7 @@ function SectionEditor({ section }: { section: SectionConfig }) {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/site-content`, {
+      const res = await fetch(`${API}/api/site-content`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

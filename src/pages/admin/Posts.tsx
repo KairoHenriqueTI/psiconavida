@@ -2,8 +2,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Plus, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { API_BASE } from "@/lib/apiBase";
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API = API_BASE;
 
 export default function AdminPosts() {
   const qc = useQueryClient();

@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { FileText, FolderOpen, Eye } from "lucide-react";
+import { API_BASE } from "@/lib/apiBase";
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API = API_BASE;
 const safeError = "Não foi possível carregar os dados do dashboard.";
 
 export default function AdminDashboard() {

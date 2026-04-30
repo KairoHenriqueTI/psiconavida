@@ -3,8 +3,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { Plus, Pencil, Trash2, X, Save } from "lucide-react";
+import { API_BASE } from "@/lib/apiBase";
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API = API_BASE;
 
 
 function slugify(text: string) {
