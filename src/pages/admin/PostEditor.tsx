@@ -3,10 +3,29 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { toast } from "sonner";
-import { ArrowLeft, Bold, Heading1, Heading2, Heading3, Italic, Link2, List, ListOrdered, Pilcrow, Quote, RemoveFormatting, Redo2, Undo2 } from "lucide-react";
+import { ArrowLeft, Bold, Heading1, Heading2, Heading3, Italic, Link2, List, ListOrdered, Palette, Pilcrow, Quote, RemoveFormatting, Redo2, Type, Undo2 } from "lucide-react";
 import { API_BASE } from "@/lib/apiBase";
 
 const API = API_BASE;
+const FONT_OPTIONS = [
+  { label: "Poppins", className: "editor-font-sans" },
+  { label: "Serifada", className: "editor-font-serif" },
+  { label: "Mono", className: "editor-font-mono" },
+];
+const SIZE_OPTIONS = [
+  { label: "Pequeno", className: "editor-size-sm" },
+  { label: "Normal", className: "editor-size-base" },
+  { label: "Grande", className: "editor-size-lg" },
+  { label: "Título", className: "editor-size-xl" },
+  { label: "Destaque", className: "editor-size-2xl" },
+];
+const COLOR_OPTIONS = [
+  { label: "Texto", className: "editor-color-default", swatch: "hsl(0 0% 20%)" },
+  { label: "Azul", className: "editor-color-blue", swatch: "hsl(210 29% 51%)" },
+  { label: "Verde", className: "editor-color-green", swatch: "hsl(157 35% 38%)" },
+  { label: "Dourado", className: "editor-color-gold", swatch: "hsl(39 68% 42%)" },
+  { label: "Vinho", className: "editor-color-wine", swatch: "hsl(348 45% 42%)" },
+];
 
 function slugify(text: string) {
   return text
@@ -24,6 +43,7 @@ export default function PostEditor() {
   const qc = useQueryClient();
   const editorRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef("");
+  const selectionRangeRef = useRef<Range | null>(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -138,7 +158,6 @@ export default function PostEditor() {
       .replace(/<div><br><\/div>/g, "<p></p>")
       .replace(/<div>/g, "<p>")
       .replace(/<\/div>/g, "</p>")
-      .replace(/<span(?![^>]*class="editor-inline-heading editor-inline-h[123]")[^>]*>/g, "")
       .replace(/<p class="editor-placeholder">.*?<\/p>/g, "");
   };
 
@@ -158,31 +177,64 @@ export default function PostEditor() {
     syncEditorContent();
   };
 
-  const getEditorSelection = () => {
+  const saveEditorSelection = () => {
     const selection = window.getSelection();
     const editor = editorRef.current;
-    if (!selection || !editor || selection.rangeCount === 0 || selection.isCollapsed) return null;
+    if (!selection || !editor || selection.rangeCount === 0 || selection.isCollapsed) return;
     const anchor = selection.anchorNode;
     const focus = selection.focusNode;
-    if (!anchor || !focus || !editor.contains(anchor) || !editor.contains(focus)) return null;
+    if (!anchor || !focus || !editor.contains(anchor) || !editor.contains(focus)) return;
+    selectionRangeRef.current = selection.getRangeAt(0).cloneRange();
+  };
+
+  const restoreEditorSelection = () => {
+    const editor = editorRef.current;
+    const range = selectionRangeRef.current;
+    const selection = window.getSelection();
+    if (!editor || !range || !selection || !editor.contains(range.commonAncestorContainer)) return null;
+    selection.removeAllRanges();
+    selection.addRange(range.cloneRange());
     return selection;
   };
 
-  const applyInlineHeading = (level: "h1" | "h2" | "h3") => {
+  const getEditorSelection = () => {
+    const selection = window.getSelection();
+    const editor = editorRef.current;
+    if (!selection || !editor || selection.rangeCount === 0 || selection.isCollapsed) return restoreEditorSelection();
+    const anchor = selection.anchorNode;
+    const focus = selection.focusNode;
+    if (!anchor || !focus || !editor.contains(anchor) || !editor.contains(focus)) return restoreEditorSelection();
+    saveEditorSelection();
+    return selection;
+  };
+
+  const applyInlineClass = (classes: string[]) => {
     const selection = getEditorSelection();
     if (!selection) return false;
     const range = selection.getRangeAt(0);
     const selected = range.extractContents();
     const span = document.createElement("span");
-    span.className = `editor-inline-heading editor-inline-${level}`;
+    span.className = classes.join(" ");
     span.appendChild(selected);
     range.insertNode(span);
     selection.removeAllRanges();
     const nextRange = document.createRange();
     nextRange.selectNodeContents(span);
     selection.addRange(nextRange);
+    selectionRangeRef.current = nextRange.cloneRange();
     syncEditorContent();
     return true;
+  };
+
+  const applyInlineHeading = (level: "h1" | "h2" | "h3") => {
+    return applyInlineClass(["editor-inline-heading", `editor-inline-${level}`]);
+  };
+
+  const applyTextClass = (className: string) => {
+    if (!className) return;
+    if (!applyInlineClass([className])) {
+      toast.info("Selecione um trecho do texto para aplicar a formatação.");
+    }
   };
 
   const heading = (level: "p" | "h1" | "h2" | "h3" | "blockquote") => {
@@ -194,6 +246,7 @@ export default function PostEditor() {
     exec("formatBlock", `<${level}>`);
   };
   const keepEditorFocus = (event: React.MouseEvent<HTMLButtonElement>) => event.preventDefault();
+  const rememberSelection = () => saveEditorSelection();
 
   return (
     <div className="max-w-4xl">
@@ -250,7 +303,41 @@ export default function PostEditor() {
           <label className="text-sm font-subtitle text-foreground block mb-1.5">Conteúdo</label>
           <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
             <div className="sticky top-0 z-10 border-b border-border bg-card/95 px-3 py-2.5 backdrop-blur">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="editor-toolbar-select">
+                  <Type size={14} />
+                  <select
+                    defaultValue=""
+                    onMouseDown={rememberSelection}
+                    onFocus={rememberSelection}
+                    onChange={(event) => {
+                      applyTextClass(event.target.value);
+                      event.target.value = "";
+                    }}
+                  >
+                    <option value="" disabled>Fonte</option>
+                    {FONT_OPTIONS.map((item) => (
+                      <option key={item.className} value={item.className}>{item.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="editor-toolbar-select">
+                  <Type size={14} />
+                  <select
+                    defaultValue=""
+                    onMouseDown={rememberSelection}
+                    onFocus={rememberSelection}
+                    onChange={(event) => {
+                      applyTextClass(event.target.value);
+                      event.target.value = "";
+                    }}
+                  >
+                    <option value="" disabled>Tamanho</option>
+                    {SIZE_OPTIONS.map((item) => (
+                      <option key={item.className} value={item.className}>{item.label}</option>
+                    ))}
+                  </select>
+                </label>
                 <button type="button" onMouseDown={keepEditorFocus} onClick={() => heading("p")} className="editor-toolbar-btn"><Pilcrow size={14} />Parágrafo</button>
                 <button type="button" onMouseDown={keepEditorFocus} onClick={() => heading("h1")} className="editor-toolbar-btn"><Heading1 size={14} />H1</button>
                 <button type="button" onMouseDown={keepEditorFocus} onClick={() => heading("h2")} className="editor-toolbar-btn"><Heading2 size={14} />H2</button>
@@ -268,6 +355,22 @@ export default function PostEditor() {
                 <button type="button" onMouseDown={keepEditorFocus} onClick={() => exec("undo")} className="editor-toolbar-btn"><Undo2 size={14} />Desfazer</button>
                 <button type="button" onMouseDown={keepEditorFocus} onClick={() => exec("redo")} className="editor-toolbar-btn"><Redo2 size={14} />Refazer</button>
               </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="editor-toolbar-label"><Palette size={13} />Cor</span>
+                {COLOR_OPTIONS.map((item) => (
+                  <button
+                    key={item.className}
+                    type="button"
+                    title={item.label}
+                    aria-label={`Aplicar cor ${item.label}`}
+                    onMouseDown={keepEditorFocus}
+                    onClick={() => applyTextClass(item.className)}
+                    className="editor-color-swatch"
+                  >
+                    <span style={{ backgroundColor: item.swatch }} />
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="editor-canvas">
               <div
@@ -283,8 +386,11 @@ export default function PostEditor() {
                   syncEditorContent();
                 }}
                 onBlur={() => syncEditorContent(true)}
+                onMouseUp={saveEditorSelection}
+                onKeyUp={saveEditorSelection}
                 onInput={() => {
                   contentRef.current = editorRef.current?.innerHTML || "";
+                  saveEditorSelection();
                 }}
                 className="editor-surface"
               />

@@ -22,6 +22,16 @@ const ALLOWED_TAGS = new Set([
   "div",
 ]);
 
+function isAllowedClass(className: string) {
+  return (
+    className === "editor-inline-heading" ||
+    /^editor-inline-h[123]$/.test(className) ||
+    /^editor-font-(sans|serif|mono)$/.test(className) ||
+    /^editor-size-(sm|base|lg|xl|2xl)$/.test(className) ||
+    /^editor-color-(default|blue|green|gold|wine)$/.test(className)
+  );
+}
+
 function sanitizeAttributes(tag: string, rawAttrs: string) {
   const attrs: string[] = [];
   const attrRe = /([a-zA-Z0-9:-]+)\s*=\s*("([^"]*)"|'([^']*)'|([^\s"'>]+))/g;
@@ -36,7 +46,7 @@ function sanitizeAttributes(tag: string, rawAttrs: string) {
       if (tag !== "span") continue;
       const allowedClasses = value
         .split(/\s+/)
-        .filter((item) => item === "editor-inline-heading" || /^editor-inline-h[123]$/.test(item));
+        .filter(isAllowedClass);
       if (!allowedClasses.length) continue;
       attrs.push(`class="${allowedClasses.join(" ")}"`);
       continue;

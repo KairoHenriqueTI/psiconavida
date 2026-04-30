@@ -129,6 +129,26 @@
     @apply inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-background px-3 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring/40;
   }
 
+  .editor-toolbar-select {
+    @apply inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-xs font-medium text-foreground shadow-sm transition-colors focus-within:ring-2 focus-within:ring-ring/40;
+  }
+
+  .editor-toolbar-select select {
+    @apply h-full cursor-pointer bg-transparent text-xs outline-none;
+  }
+
+  .editor-toolbar-label {
+    @apply inline-flex h-8 items-center gap-1.5 text-xs font-medium text-muted-foreground;
+  }
+
+  .editor-color-swatch {
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background shadow-sm transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring/40;
+  }
+
+  .editor-color-swatch span {
+    @apply block h-4 w-4 rounded-full border border-border;
+  }
+
   .editor-canvas {
     @apply max-h-[68vh] overflow-auto bg-muted/30 px-4 py-5 sm:px-8;
   }
@@ -159,20 +179,72 @@
     font-family: var(--font-heading);
   }
 
-  .editor-surface .editor-inline-heading {
+  .editor-inline-heading {
     font-family: var(--font-heading);
   }
 
-  .editor-surface .editor-inline-h1 {
+  .editor-inline-h1 {
     @apply text-3xl leading-tight;
   }
 
-  .editor-surface .editor-inline-h2 {
+  .editor-inline-h2 {
     @apply text-2xl leading-tight;
   }
 
-  .editor-surface .editor-inline-h3 {
+  .editor-inline-h3 {
     @apply text-xl leading-tight;
+  }
+
+  .editor-font-sans {
+    font-family: var(--font-body);
+  }
+
+  .editor-font-serif {
+    font-family: var(--font-heading);
+  }
+
+  .editor-font-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  }
+
+  .editor-size-sm {
+    @apply text-sm leading-7;
+  }
+
+  .editor-size-base {
+    @apply text-base leading-8;
+  }
+
+  .editor-size-lg {
+    @apply text-lg leading-8;
+  }
+
+  .editor-size-xl {
+    @apply text-xl leading-9;
+  }
+
+  .editor-size-2xl {
+    @apply text-2xl leading-10;
+  }
+
+  .editor-color-default {
+    color: hsl(var(--foreground));
+  }
+
+  .editor-color-blue {
+    color: hsl(var(--primary));
+  }
+
+  .editor-color-green {
+    color: hsl(157 35% 38%);
+  }
+
+  .editor-color-gold {
+    color: hsl(39 68% 42%);
+  }
+
+  .editor-color-wine {
+    color: hsl(348 45% 42%);
   }
 
   .editor-surface p {
