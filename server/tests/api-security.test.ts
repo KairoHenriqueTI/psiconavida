@@ -277,4 +277,67 @@ describe("API security guards", () => {
     );
     expect(res.status).toHaveBeenCalledWith(201);
   });
+
+  it("returns a useful conflict when post slug already exists", async () => {
+    const { getServerSession } = await import("next-auth/next");
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: "author-1", role: "editor" } } as any);
+    prismaMock.post.create.mockRejectedValue({ code: "P2002" });
+    const handler = (await import("../pages/api/posts/index")).default;
+
+    const req: any = {
+      method: "POST",
+      headers: {},
+      body: {
+        title: "Hello",
+        slug: "hello",
+        content: "<p>Hello</p>",
+        excerpt: "",
+        published: true,
+        categoryId: "",
+        image: "",
+      },
+    };
+    const res = makeRes();
+
+    await handler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.body).toEqual({ error: "Já existe uma publicação com este slug." });
+  });
+
+  it("normalizes empty optional post fields before create", async () => {
+    const { getServerSession } = await import("next-auth/next");
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: "author-1", role: "editor" } } as any);
+    prismaMock.post.create.mockResolvedValue({ id: "post-1" } as any);
+    const handler = (await import("../pages/api/posts/index")).default;
+
+    const req: any = {
+      method: "POST",
+      headers: {},
+      body: {
+        title: "  Hello  ",
+        slug: "  hello  ",
+        content: "<p>Hello</p>",
+        excerpt: "",
+        published: false,
+        categoryId: "",
+        image: "",
+      },
+    };
+    const res = makeRes();
+
+    await handler(req, res);
+
+    expect(prismaMock.post.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          title: "Hello",
+          slug: "hello",
+          excerpt: null,
+          categoryId: null,
+          image: null,
+        }),
+      })
+    );
+  });
 });

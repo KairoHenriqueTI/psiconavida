@@ -73,24 +73,31 @@ export default function PostEditor() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      const content = form.content.replace(/<p><br><\/p>/g, "").trim();
       const payload: any = {
-        title: form.title,
-        slug: form.slug,
-        excerpt: form.excerpt,
-        content: form.content,
-        image: form.image,
+        title: form.title.trim(),
+        slug: form.slug.trim(),
+        excerpt: form.excerpt.trim(),
+        content,
+        image: form.image.trim(),
         categoryId: form.category_id || null,
-        read_time: form.read_time,
+        read_time: form.read_time.trim(),
         published: !!form.published,
         date: new Date(form.date).toISOString(),
       };
 
       if (isNew) {
         const res = await fetch(`${API}/api/posts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), credentials: 'include' });
-        if (!res.ok) throw new Error('Failed to create post');
+        if (!res.ok) {
+          const error = await res.json().catch(() => ({}));
+          throw new Error(error?.error || 'Não foi possível criar a publicação.');
+        }
       } else {
         const res = await fetch(`${API}/api/posts/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), credentials: 'include' });
-        if (!res.ok) throw new Error('Failed to update post');
+        if (!res.ok) {
+          const error = await res.json().catch(() => ({}));
+          throw new Error(error?.error || 'Não foi possível atualizar a publicação.');
+        }
       }
     },
     onSuccess: () => {
@@ -227,8 +234,7 @@ export default function PostEditor() {
                 }
               }}
               onBlur={(e) => {
-                const nextHtml = normalizeEditorHtml((e.currentTarget as HTMLElement).innerHTML);
-                const normalized = nextHtml === '<p>Escreva aqui o conteúdo da publicação...</p>' ? "" : nextHtml;
+                const normalized = normalizeEditorHtml((e.currentTarget as HTMLElement).innerHTML);
                 setHtmlDraft(normalized);
                 update("content", normalized);
               }}
@@ -237,7 +243,7 @@ export default function PostEditor() {
                 setHtmlDraft(nextHtml);
                 update("content", nextHtml);
               }}
-              dangerouslySetInnerHTML={{ __html: htmlDraft || form.content || "<p class='editor-placeholder'>Escreva aqui o conteúdo da publicação...</p>" }}
+              dangerouslySetInnerHTML={{ __html: htmlDraft || form.content }}
               className="editor-surface min-h-[360px] max-h-[66vh] overflow-auto"
             />
           </div>

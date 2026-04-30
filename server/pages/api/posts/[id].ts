@@ -13,6 +13,17 @@ function setCors(req: NextApiRequest, res: any) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
+function cleanString(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function postWriteError(res: NextApiResponse, error: any) {
+  if (error?.code === "P2002") return jsonError(res, 409, "Já existe uma publicação com este slug.");
+  if (error?.code === "P2003") return jsonError(res, 400, "Categoria inválida.");
+  if (error?.code === "P2025") return jsonError(res, 404, "Publicação não encontrada.");
+  return jsonError(res, 500, "Não foi possível salvar a publicação.");
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -52,22 +63,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'PUT') {
     const { title, slug, content, excerpt, published, categoryId, image } = req.body;
+    const cleanedTitle = title === undefined ? undefined : cleanString(title);
+    const cleanedSlug = slug === undefined ? undefined : cleanString(slug);
+    if (title !== undefined && !cleanedTitle) return jsonError(res, 400, "Informe o título da publicação.");
+    if (slug !== undefined && !cleanedSlug) return jsonError(res, 400, "Informe o slug da publicação.");
     try {
       const updated = await prisma.post.update({
         where: { id },
         data: {
-          title,
-          slug,
-          content: sanitizeHtml(content ? String(content) : ""),
-          excerpt,
+          ...(title !== undefined ? { title: cleanedTitle } : {}),
+          ...(slug !== undefined ? { slug: cleanedSlug } : {}),
+          ...(content !== undefined ? { content: sanitizeHtml(content ? String(content) : "") } : {}),
+          ...(excerpt !== undefined ? { excerpt: cleanString(excerpt) || null } : {}),
           published,
-          categoryId,
-          image,
+          ...(categoryId !== undefined ? { categoryId: cleanString(categoryId) || null } : {}),
+          ...(image !== undefined ? { image: cleanString(image) || null } : {}),
         },
       });
       return res.json(updated);
-    } catch {
-      return jsonError(res, 500, "Could not update post");
+    } catch (error) {
+      return postWriteError(res, error);
     }
   }
 

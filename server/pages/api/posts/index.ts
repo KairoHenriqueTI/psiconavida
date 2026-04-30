@@ -14,6 +14,16 @@ function setCors(req: NextApiRequest, res: any) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
+function cleanString(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function postWriteError(res: NextApiResponse, error: any) {
+  if (error?.code === "P2002") return jsonError(res, 409, "Já existe uma publicação com este slug.");
+  if (error?.code === "P2003") return jsonError(res, 400, "Categoria inválida.");
+  return jsonError(res, 500, "Não foi possível salvar a publicação.");
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -49,22 +59,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!session) return;
     const userId = (session.user as any).id;
     const { title, slug, content, excerpt, published, categoryId, image } = req.body;
+    const cleanedTitle = cleanString(title);
+    const cleanedSlug = cleanString(slug);
+    if (!cleanedTitle) return jsonError(res, 400, "Informe o título da publicação.");
+    if (!cleanedSlug) return jsonError(res, 400, "Informe o slug da publicação.");
     try {
       const post = await prisma.post.create({
         data: {
-          title,
-          slug,
+          title: cleanedTitle,
+          slug: cleanedSlug,
           content: sanitizeHtml(content ? String(content) : ""),
-          excerpt,
+          excerpt: cleanString(excerpt) || null,
           published: !!published,
-          categoryId,
-          image,
+          categoryId: cleanString(categoryId) || null,
+          image: cleanString(image) || null,
           authorId: userId,
         },
       });
       return res.status(201).json(post);
-    } catch {
-      return jsonError(res, 500, "Could not create post");
+    } catch (error) {
+      return postWriteError(res, error);
     }
   }
 
