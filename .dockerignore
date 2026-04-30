@@ -6,3 +6,5 @@ server/dumps
 server/pgdata
 .git
 .DS_Store
+*.tar
+*.tar.gz
