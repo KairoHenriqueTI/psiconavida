@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { API_BASE } from "@/lib/apiBase";
 
 type SessionUser = { id?: string; name?: string | null; email?: string | null; role?: string } | null;
 
@@ -103,10 +102,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await fetch(`${API_BASE}/api/auth/signout`, { method: 'POST', credentials: 'include' });
+    try {
+      const csrfRes = await fetch(`/api/auth/csrf`, { credentials: 'include' });
+      const csrfData = await csrfRes.json().catch(() => ({}));
+      const body = new URLSearchParams({
+        csrfToken: csrfData?.csrfToken || "",
+        callbackUrl: `${window.location.origin}/admin/login`,
+        json: "true",
+      });
+
+      await fetch(`/api/auth/signout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
+        credentials: 'include',
+      });
+    } finally {
+      try {
+        document.cookie = "next-auth.session-token=; Max-Age=0; path=/";
+        document.cookie = "__Secure-next-auth.session-token=; Max-Age=0; path=/";
+        document.cookie = "__Host-next-auth.csrf-token=; Max-Age=0; path=/";
+        document.cookie = "__Secure-next-auth.callback-url=; Max-Age=0; path=/";
+      } catch (e) {
+        // Browser cookie cleanup is best-effort; NextAuth clears httpOnly cookies server-side.
+      }
+    }
     setSession(null);
     setUser(null);
     setUserRole(null);
+    window.location.href = "/admin/login";
   };
 
   return (
