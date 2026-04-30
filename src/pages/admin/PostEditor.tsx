@@ -138,8 +138,7 @@ export default function PostEditor() {
       .replace(/<div><br><\/div>/g, "<p></p>")
       .replace(/<div>/g, "<p>")
       .replace(/<\/div>/g, "</p>")
-      .replace(/<span[^>]*>/g, "")
-      .replace(/<\/span>/g, "")
+      .replace(/<span(?![^>]*class="editor-inline-heading editor-inline-h[123]")[^>]*>/g, "")
       .replace(/<p class="editor-placeholder">.*?<\/p>/g, "");
   };
 
@@ -159,7 +158,41 @@ export default function PostEditor() {
     syncEditorContent();
   };
 
-  const heading = (level: "p" | "h1" | "h2" | "h3" | "blockquote") => exec("formatBlock", `<${level}>`);
+  const getEditorSelection = () => {
+    const selection = window.getSelection();
+    const editor = editorRef.current;
+    if (!selection || !editor || selection.rangeCount === 0 || selection.isCollapsed) return null;
+    const anchor = selection.anchorNode;
+    const focus = selection.focusNode;
+    if (!anchor || !focus || !editor.contains(anchor) || !editor.contains(focus)) return null;
+    return selection;
+  };
+
+  const applyInlineHeading = (level: "h1" | "h2" | "h3") => {
+    const selection = getEditorSelection();
+    if (!selection) return false;
+    const range = selection.getRangeAt(0);
+    const selected = range.extractContents();
+    const span = document.createElement("span");
+    span.className = `editor-inline-heading editor-inline-${level}`;
+    span.appendChild(selected);
+    range.insertNode(span);
+    selection.removeAllRanges();
+    const nextRange = document.createRange();
+    nextRange.selectNodeContents(span);
+    selection.addRange(nextRange);
+    syncEditorContent();
+    return true;
+  };
+
+  const heading = (level: "p" | "h1" | "h2" | "h3" | "blockquote") => {
+    if ((level === "h1" || level === "h2" || level === "h3") && applyInlineHeading(level)) return;
+    if (level === "p" && getEditorSelection()) {
+      exec("removeFormat");
+      return;
+    }
+    exec("formatBlock", `<${level}>`);
+  };
   const keepEditorFocus = (event: React.MouseEvent<HTMLButtonElement>) => event.preventDefault();
 
   return (

@@ -32,6 +32,15 @@ function sanitizeAttributes(tag: string, rawAttrs: string) {
     if (name.startsWith("on")) continue;
     if (name === "style") continue;
     if ((name === "href" || name === "src") && /^javascript:/i.test(value)) continue;
+    if (name === "class") {
+      if (tag !== "span") continue;
+      const allowedClasses = value
+        .split(/\s+/)
+        .filter((item) => item === "editor-inline-heading" || /^editor-inline-h[123]$/.test(item));
+      if (!allowedClasses.length) continue;
+      attrs.push(`class="${allowedClasses.join(" ")}"`);
+      continue;
+    }
     if (tag !== "a" && name === "target") continue;
     if (tag !== "img" && name === "alt") continue;
     attrs.push(`${name}="${value.replace(/"/g, "&quot;")}"`);

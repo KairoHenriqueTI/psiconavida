@@ -159,6 +159,22 @@
     font-family: var(--font-heading);
   }
 
+  .editor-surface .editor-inline-heading {
+    font-family: var(--font-heading);
+  }
+
+  .editor-surface .editor-inline-h1 {
+    @apply text-3xl leading-tight;
+  }
+
+  .editor-surface .editor-inline-h2 {
+    @apply text-2xl leading-tight;
+  }
+
+  .editor-surface .editor-inline-h3 {
+    @apply text-xl leading-tight;
+  }
+
   .editor-surface p {
     @apply mb-4;
   }

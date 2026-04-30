@@ -278,6 +278,34 @@ describe("API security guards", () => {
     expect(res.status).toHaveBeenCalledWith(201);
   });
 
+  it("preserves allowed inline heading classes in post content", async () => {
+    const { getServerSession } = await import("next-auth/next");
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: "author-1", role: "editor" } } as any);
+    prismaMock.post.create.mockResolvedValue({ id: "post-1" } as any);
+    const handler = (await import("../pages/api/posts/index")).default;
+
+    const req: any = {
+      method: "POST",
+      headers: {},
+      body: {
+        title: "Hello",
+        slug: "hello",
+        content: `<p>Texto <span class="editor-inline-heading editor-inline-h2 evil">selecionado</span></p>`,
+      },
+    };
+    const res = makeRes();
+
+    await handler(req, res);
+
+    expect(prismaMock.post.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          content: '<p>Texto <span class="editor-inline-heading editor-inline-h2">selecionado</span></p>',
+        }),
+      })
+    );
+  });
+
   it("returns a useful conflict when post slug already exists", async () => {
     const { getServerSession } = await import("next-auth/next");
     vi.mocked(getServerSession).mockResolvedValue({ user: { id: "author-1", role: "editor" } } as any);
