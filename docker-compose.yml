@@ -19,6 +19,8 @@ services:
       context: ./server
       dockerfile: Dockerfile
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3001"
     depends_on:
       db:
         condition: service_healthy
@@ -41,11 +43,15 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
     depends_on:
       - backend
 
   caddy:
     image: caddy:2.8-alpine
+    profiles:
+      - caddy
     restart: unless-stopped
     depends_on:
       - frontend
